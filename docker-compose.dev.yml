@@ -1,0 +1,65 @@
+# Docker Compose para Desenvolvimento Local
+# Use este arquivo para desenvolvimento sem Nginx/SSL
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: financeiro_db_dev
+    environment:
+      POSTGRES_DB: financeiro_pro
+      POSTGRES_USER: financeiro
+      POSTGRES_PASSWORD: financeiro123
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - financeiro_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: financeiro_minio_dev
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data_dev:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - financeiro_network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financeiro_api_dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://financeiro:financeiro123@db:5432/financeiro_pro
+      SECRET_KEY: dev-secret-key-change-in-production
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      ENVIRONMENT: development
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - minio
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - financeiro_network
+
+volumes:
+  postgres_data_dev:
+  minio_data_dev:
+
+networks:
+  financeiro_network:
+    driver: bridge

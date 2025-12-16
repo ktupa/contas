@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: financeiro_db
+    environment:
+      POSTGRES_DB: financeiro_pro
+      POSTGRES_USER: financeiro
+      POSTGRES_PASSWORD: financeiro123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financeiro -d financeiro_pro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - financeiro_network
+
+  # MinIO (S3-compatible storage)
+  minio:
+    image: minio/minio:latest
+    container_name: financeiro_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - financeiro_network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financeiro_api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://financeiro:financeiro123@db:5432/financeiro_pro
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production-use-openssl-rand-hex-32}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: financeiro-attachments
+      MINIO_SECURE: "false"
+      MINIO_PUBLIC_URL: "https://contas.semppreonline.com.br/storage"
+      APP_NAME: Financeiro Pro
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+      AUDIT_LOG_RETENTION_DAYS: 180
+      SESSION_RETENTION_DAYS: 90
+      CERT_MASTER_KEY: 1xG1rGvlUX9zkBOL24eN85FbsO8Y1UIgevon/5AilLQ=
+      NFE_AMBIENTE_PRODUCAO: "true"
+      NFE_SYNC_INTERVAL_HOURS: 4
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - financeiro_network
+
+  # Next.js Frontend
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: financeiro_web
+    environment:
+      NEXT_PUBLIC_API_URL: http://contas.semppreonline.com.br/api
+    ports:
+      - "3002:3002"
+    depends_on:
+      - api
+    networks:
+      - financeiro_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: financeiro_nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - financeiro_network
+
+  # Certbot for SSL
+  certbot:
+    image: certbot/certbot:latest
+    container_name: financeiro_certbot
+    volumes:
+      - certbot_www:/var/www/certbot:rw
+      - certbot_conf:/etc/letsencrypt:rw
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - financeiro_network
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+  certbot_www:
+    driver: local
+  certbot_conf:
+    driver: local
+
+networks:
+  financeiro_network:
+    driver: bridge
