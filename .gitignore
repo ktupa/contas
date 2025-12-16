@@ -1,3 +1,11 @@
+# Environment
+.env
+.env.local
+.env.production
+*.env
+!.env.example
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,43 +26,82 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual environments
+MANIFEST
 venv/
-env/
 ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Environment
-.env
-.env.local
-
-# Logs
-*.log
-logs/
-
-# Database
-*.db
-*.sqlite
-
-# Docker
-.dockerignore
-
-# OS
-.DS_Store
-Thumbs.db
+env/
+.venv
 
 # Next.js
 .next/
 out/
-node_modules/
+build
+dist
+*.tsbuildinfo
+next-env.d.ts
 
-# Testing
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres_data/
+
+# SSL/Certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+!*.example.*
+
+# MinIO/Storage
+minio_data/
+uploads/
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Test
+.pytest_cache/
 .coverage
 htmlcov/
-.pytest_cache/
+.tox/
+.hypothesis/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Backup
+*.bak
+*.backup
+*.old
+backup*.sql
