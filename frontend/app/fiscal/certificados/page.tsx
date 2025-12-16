@@ -21,8 +21,10 @@ import {
   Alert,
   Paper,
   ThemeIcon,
+  Box
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
   IconCertificate,
@@ -39,6 +41,7 @@ import { useRouter } from 'next/navigation';
 
 function CertificadosContent() {
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [companies, setCompanies] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [certificate, setCertificate] = useState<any>(null);

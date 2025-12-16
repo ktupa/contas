@@ -165,39 +165,43 @@ function ColaboradoresContent() {
 
   return (
     <Shell>
-      <Stack gap="lg">
+      <Stack gap={isMobile ? 'sm' : 'lg'}>
         {/* Header */}
-        <Paper p="md" radius="md" withBorder>
-          <Group justify="space-between" align="center">
-            <div>
-              <Title order={2}>Colaboradores</Title>
-              <Text c="dimmed" size="sm">Gerencie os colaboradores da empresa</Text>
-            </div>
+        <Paper p={isMobile ? 'sm' : 'md'} radius="md" withBorder>
+          <Stack gap="sm">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Box>
+                <Title order={isMobile ? 3 : 2}>Colaboradores</Title>
+                <Text c="dimmed" size={isMobile ? 'xs' : 'sm'}>Gerencie os colaboradores da empresa</Text>
+              </Box>
+            </Group>
             <Button 
+              fullWidth={isMobile}
               leftSection={<IconPlus size={16} />}
               variant="gradient"
               gradient={{ from: 'violet', to: 'purple' }}
               onClick={handleOpenCreate}
+              size={isMobile ? 'md' : 'sm'}
             >
               Novo Colaborador
             </Button>
-          </Group>
+          </Stack>
         </Paper>
 
         {/* KPIs */}
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing={isMobile ? 'sm' : 'lg'}>
+          <Card shadow="sm" padding={isMobile ? 'md' : 'lg'} radius="md" withBorder>
             <Group justify="space-between">
               <div>
                 <Text size="sm" c="dimmed">Total Colaboradores</Text>
                 <Text size="xl" fw={700}>{employees.length}</Text>
               </div>
-              <ThemeIcon size={50} radius="md" variant="light" color="blue">
-                <IconUsers size={28} />
+              <ThemeIcon size={isMobile ? 40 : 50} radius="md" variant="light" color="blue">
+                <IconUsers size={isMobile ? 22 : 28} />
               </ThemeIcon>
             </Group>
           </Card>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
+          <Card shadow="sm" padding={isMobile ? 'md' : 'lg'} radius="md" withBorder>
             <Group justify="space-between">
               <div>
                 <Text size="sm" c="dimmed">Ativos</Text>
@@ -306,6 +310,7 @@ function ColaboradoresContent() {
           onClose={() => { setOpened(false); setEditingId(null); form.reset(); }}
           title={editingId ? 'Editar Colaborador' : 'Novo Colaborador'}
           size="md"
+          fullScreen={isMobile}
         >
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>

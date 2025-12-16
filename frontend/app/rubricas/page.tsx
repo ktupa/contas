@@ -21,9 +21,11 @@ import {
   Text,
   ThemeIcon,
   Paper,
-  SimpleGrid
+  SimpleGrid,
+  Box
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconEdit, IconTrash, IconReceipt, IconPlus, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react';
 import api from '@/lib/api';
@@ -45,6 +47,7 @@ const CALCULATION_TYPES = [
 ];
 
 function RubricasContent() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [rubrics, setRubrics] = useState<any[]>([]);
   const [opened, setOpened] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -12,13 +12,17 @@ import {
   Card,
   Text,
   Table,
-  Badge
+  Badge,
+  Box,
+  ScrollArea
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { DatePickerInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import api from '@/lib/api';
 
 function RelatoriosContent() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [competency, setCompetency] = useState<string>('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
